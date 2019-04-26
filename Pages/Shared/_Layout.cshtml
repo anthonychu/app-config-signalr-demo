@@ -82,5 +82,18 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     @RenderSection("Scripts", required: false)
+
+    <script src="https://cdn.jsdelivr.net/npm/@@aspnet/signalr@@1.1.4/dist/browser/signalr.min.js"></script>
+    <script>
+        var connection = new signalR.HubConnectionBuilder()
+            .withUrl("/settingshub")
+            .build()
+        
+        connection.on('backgroundChanged', function(bgColor) {
+            document.getElementsByTagName('body')[0].style.backgroundColor = bgColor
+        })
+
+        connection.start()
+    </script>
 </body>
 </html>

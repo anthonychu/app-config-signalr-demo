@@ -15,6 +15,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using appconfigapp.Data;
 using appconfigapp.Models;
+using appconfigapp.Hubs;
+using Microsoft.AspNetCore.SignalR;
 
 namespace appconfigapp
 {
@@ -44,11 +46,16 @@ namespace appconfigapp
                 .AddDefaultUI(UIFramework.Bootstrap4)
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
+            services.AddSignalR();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(
+            IApplicationBuilder app,
+            IHostingEnvironment env,
+            IOptionsMonitor<Settings> optMonitor,
+            IHubContext<SettingsHub> settingsHubContext)
         {
             if (env.IsDevelopment())
             {
@@ -66,6 +73,15 @@ namespace appconfigapp
             app.UseCookiePolicy();
 
             app.UseAuthentication();
+
+            optMonitor.OnChange(settings => {
+                System.Console.WriteLine("***** changed!");
+                settingsHubContext.Clients.All.SendAsync("backgroundChanged", settings.BackgroundColor).Wait();
+            });
+
+            app.UseSignalR(builder => {
+                builder.MapHub<SettingsHub>("/settingshub");
+            });
 
             app.UseMvc();
         }
