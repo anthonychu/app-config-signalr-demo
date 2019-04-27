@@ -39,9 +39,16 @@ namespace appconfigapp
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlite(
-                    Configuration.GetConnectionString("DefaultConnection")));
+            var connectionString = Configuration.GetConnectionString("DefaultConnection");
+            var isSqlite = connectionString.Contains("datasource=", StringComparison.InvariantCultureIgnoreCase);
+            if (isSqlite) {
+                services.AddDbContext<ApplicationDbContext>(options =>
+                    options.UseSqlite(connectionString));
+            } else {
+                services.AddDbContext<ApplicationDbContext>(options =>
+                    options.UseSqlServer(connectionString));
+            }
+
             services.AddDefaultIdentity<IdentityUser>()
                 .AddDefaultUI(UIFramework.Bootstrap4)
                 .AddEntityFrameworkStores<ApplicationDbContext>();
@@ -55,7 +62,8 @@ namespace appconfigapp
             IApplicationBuilder app,
             IHostingEnvironment env,
             IOptionsMonitor<Settings> optMonitor,
-            IHubContext<SettingsHub> settingsHubContext)
+            IHubContext<SettingsHub> settingsHubContext,
+            ApplicationDbContext dbContext)
         {
             if (env.IsDevelopment())
             {
@@ -84,6 +92,8 @@ namespace appconfigapp
             });
 
             app.UseMvc();
+
+            dbContext.Database.Migrate();
         }
     }
 }

@@ -28,7 +28,7 @@ namespace appconfigapp
                     if (!string.IsNullOrEmpty(appConfigConnectionString)) {
                         config.AddAzureAppConfiguration(options =>
                             options.Connect(appConfigConnectionString)
-                        .Watch("Settings:BackgroundColor", TimeSpan.FromSeconds(10)));
+                        .Watch("Settings:BackgroundColor", TimeSpan.FromSeconds(3)));
                     }
                 })
                 .UseStartup<Startup>();
